@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,23 +30,43 @@ public class ContactController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Contact>> getAllContacts() {
-        return ResponseEntity.ok(contactService.getAllContacts());
+    public ResponseEntity<List<Contact>> getAllContacts(
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        return ResponseEntity.ok(
+                contactService.getAllContacts(email)
+        );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Contact> getContactById(@PathVariable Long id) {
+    public ResponseEntity<Contact> getContactById(
+            @PathVariable Long id,
+            Authentication authentication) {
 
-        return contactService.getContactById(id)
+        String email = authentication.getName();
+
+        return contactService
+                .getContactById(id, email)
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseGet(() ->
+                        ResponseEntity.notFound().build()
+                );
     }
 
     @PostMapping
     public ResponseEntity<Contact> createContact(
-            @Valid @RequestBody Contact contact) {
+            @Valid @RequestBody Contact contact,
+            Authentication authentication) {
 
-        Contact savedContact = contactService.createContact(contact);
+        String email = authentication.getName();
+
+        Contact savedContact =
+                contactService.createContact(
+                        contact,
+                        email
+                );
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -55,17 +76,31 @@ public class ContactController {
     @PutMapping("/{id}")
     public ResponseEntity<Contact> updateContact(
             @PathVariable Long id,
-            @Valid @RequestBody Contact contact) {
+            @Valid @RequestBody Contact contact,
+            Authentication authentication) {
 
-        return contactService.updateContact(id, contact)
+        String email = authentication.getName();
+
+        return contactService
+                .updateContact(id, contact, email)
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseGet(() ->
+                        ResponseEntity.notFound().build()
+                );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteContact(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteContact(
+            @PathVariable Long id,
+            Authentication authentication) {
 
-        boolean deleted = contactService.deleteContact(id);
+        String email = authentication.getName();
+
+        boolean deleted =
+                contactService.deleteContact(
+                        id,
+                        email
+                );
 
         if (!deleted) {
             return ResponseEntity.notFound().build();

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.sathish.contactmanagement.dto.LoginRequest;
 import com.sathish.contactmanagement.dto.SignupRequest;
 import com.sathish.contactmanagement.entity.User;
+import com.sathish.contactmanagement.security.JwtService;
 import com.sathish.contactmanagement.service.UserService;
 
 import jakarta.validation.Valid;
@@ -24,13 +25,16 @@ public class AuthController {
 
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public AuthController(
             UserService userService,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService) {
 
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/signup")
@@ -120,8 +124,11 @@ public class AuthController {
                     .body(response);
         }
 
+        String token = jwtService.generateToken(user);
+
         response.put("status", 200);
         response.put("message", "Login successful");
+        response.put("token", token);
         response.put("userId", user.getId());
         response.put("name", user.getName());
         response.put("email", user.getEmail());

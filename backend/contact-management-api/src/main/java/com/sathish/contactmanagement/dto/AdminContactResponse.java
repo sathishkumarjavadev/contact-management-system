@@ -1,66 +1,29 @@
-package com.sathish.contactmanagement.entity;
+package com.sathish.contactmanagement.dto;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
+public class AdminContactResponse {
 
-@Entity
-@Table(name = "contacts")
-public class Contact {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @NotBlank(message = "Name is required")
-    @Column(nullable = false)
     private String firstName;
-
     private String lastName;
-
     private String email;
-
-    @NotBlank(message = "Contact number is required")
-    @Column(nullable = false)
     private String phone;
-
     private String company;
-
     private String jobTitle;
-
-    @NotBlank(message = "Address is required")
-    @Column(nullable = false)
     private String address;
-
-    @NotBlank(message = "City is required")
-    @Column(nullable = false)
     private String city;
-
-    @NotBlank(message = "State is required")
-    @Column(nullable = false)
     private String state;
-
-    @NotBlank(message = "Country is required")
-    @Column(nullable = false)
     private String country;
-
     private String notes;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    private Long userId;
+    private String userName;
+    private String userEmail;
 
-    public Contact() {
+    public AdminContactResponse() {
     }
 
-    public Contact(
+    public AdminContactResponse(
+            Long id,
             String firstName,
             String lastName,
             String email,
@@ -71,8 +34,12 @@ public class Contact {
             String city,
             String state,
             String country,
-            String notes) {
+            String notes,
+            Long userId,
+            String userName,
+            String userEmail) {
 
+        this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
@@ -84,6 +51,9 @@ public class Contact {
         this.state = state;
         this.country = country;
         this.notes = notes;
+        this.userId = userId;
+        this.userName = userName;
+        this.userEmail = userEmail;
     }
 
     public Long getId() {
@@ -182,11 +152,27 @@ public class Contact {
         this.notes = notes;
     }
 
-    public User getUser() {
-        return user;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 }

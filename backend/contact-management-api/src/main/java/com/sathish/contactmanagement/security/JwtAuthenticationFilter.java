@@ -1,9 +1,9 @@
+
 package com.sathish.contactmanagement.security;
 
 import java.io.IOException;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -18,9 +18,14 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final CustomUserDetailsService customUserDetailsService;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(
+            JwtService jwtService,
+            CustomUserDetailsService customUserDetailsService) {
+
         this.jwtService = jwtService;
+        this.customUserDetailsService = customUserDetailsService;
     }
 
     @Override
@@ -49,23 +54,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     jwtService.extractAllClaims(token);
 
             String email = claims.getSubject();
-            String role = claims.get("role", String.class);
 
             if (email != null
                     && SecurityContextHolder
                             .getContext()
                             .getAuthentication() == null) {
 
-                SimpleGrantedAuthority authority =
-                        new SimpleGrantedAuthority(
-                                "ROLE_" + role
-                        );
+                org.springframework.security.core.userdetails.UserDetails userDetails =
+                        customUserDetailsService.loadUserByUsername(email);
+
+                if (!userDetails.isEnabled()) {
+
+                    SecurityContextHolder.clearContext();
+
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
-                                email,
+                                userDetails,
                                 null,
-                                java.util.List.of(authority)
+                                userDetails.getAuthorities()
                         );
 
                 SecurityContextHolder

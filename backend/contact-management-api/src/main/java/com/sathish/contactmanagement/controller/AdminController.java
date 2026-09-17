@@ -1,10 +1,14 @@
 package com.sathish.contactmanagement.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,6 +18,7 @@ import com.sathish.contactmanagement.entity.Contact;
 import com.sathish.contactmanagement.entity.User;
 import com.sathish.contactmanagement.repository.ContactRepository;
 import com.sathish.contactmanagement.repository.UserRepository;
+import com.sathish.contactmanagement.service.UserService;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -21,13 +26,16 @@ public class AdminController {
 
     private final UserRepository userRepository;
     private final ContactRepository contactRepository;
+    private final UserService userService;
 
     public AdminController(
             UserRepository userRepository,
-            ContactRepository contactRepository) {
+            ContactRepository contactRepository,
+            UserService userService) {
 
         this.userRepository = userRepository;
         this.contactRepository = contactRepository;
+        this.userService = userService;
     }
 
     @GetMapping("/users")
@@ -55,6 +63,50 @@ public class AdminController {
                         .toList();
 
         return ResponseEntity.ok(contacts);
+    }
+
+    @PutMapping("/users/{userId}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateUserStatus(
+            @PathVariable Long userId,
+            @RequestBody Map<String, Boolean> request) {
+
+        Boolean enabled = request.get("enabled");
+
+        if (enabled == null) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of(
+                            "message",
+                            "enabled field is required"
+                    ));
+        }
+
+        try {
+
+            User user =
+                    userService.updateUserStatus(
+                            userId,
+                            enabled
+                    );
+
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message",
+                            enabled
+                                    ? "User enabled successfully"
+                                    : "User disabled successfully",
+                            "userId",
+                            user.getId(),
+                            "enabled",
+                            user.isEnabled()
+                    )
+            );
+
+        } catch (RuntimeException exception) {
+
+            return ResponseEntity.notFound()
+                    .build();
+        }
     }
 
     private AdminUserResponse convertToUserResponse(User user) {
